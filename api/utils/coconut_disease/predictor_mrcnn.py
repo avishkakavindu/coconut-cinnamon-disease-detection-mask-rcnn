@@ -19,6 +19,9 @@ from .mrcnn.visualize import display_instances
 
 # Define the configuration for the model
 class ModelConfig(Config):
+    """
+    Configuration for the Mask R-CNN model.
+    """
     NAME = "coconut_diseases_coco"
     NUM_CLASSES = 1 + 3
     STEPS_PER_EPOCH = 1
@@ -28,7 +31,14 @@ class ModelConfig(Config):
 
 
 class MaskRCNNModel:
+    """
+        Wrapper class for the Mask R-CNN model.
+    """
+
     def __init__(self):
+        """
+        Initializes the Mask R-CNN model and loads the pre-trained weights.
+        """
         ROOT_DIR = os.path.abspath("./")
         sys.path.append(ROOT_DIR)
         self.config = ModelConfig()
@@ -40,6 +50,15 @@ class MaskRCNNModel:
         self.class_names = ['BG', 'black_spot', 'brown_blight', 'tip_burn']
 
     def predict(self, img_path):
+        """
+        Runs object detection on the specified image and returns the predicted class names.
+
+        Parameters:
+        img_path (str): path to the input image
+
+        Returns:
+        pred_to_text (list): predicted class names of the detected objects
+        """
         # Load the input image
         sample_img = skimage.io.imread(img_path)
         # plt.imshow(sample_img)
@@ -79,48 +98,6 @@ class MaskRCNNModel:
         pred_to_text = [self.class_names[class_id] for class_id in predicted_class_ids]
         return pred_to_text
 
-    # Show detected objects in color and all others in B&W
-    def color_splash(self, img, mask):
-        """Apply color splash effect.
-        image: RGB image [height, width, 3]
-        mask: instance segmentation mask [height, width, instance count]
-        Returns result image.
-        """
-        # Make a grayscale copy of the image. The grayscale copy still
-        # has 3 RGB channels, though.
-        gray = skimage.color.gray2rgb(skimage.color.rgb2gray(img)) * 255
-        # Copy color pixels from the original color image where mask is set
-        if mask.shape[-1] > 0:
-            # We're treating all instances as one, so collapse the mask into one layer
-            mask = (np.sum(mask, -1, keepdims=True) >= 1)
-            splash = np.where(mask, img, gray).astype(np.uint8)
-        else:
-            splash = gray.astype(np.uint8)
-        return splash
-
-    def detect_and_color_splash(self, model, image_path=None, video_path=None):
-        assert image_path
-
-        # Run model detection and generate the color splash effect
-        # print("Running on {}".format(img))
-        # Read image
-        img = skimage.io.imread(image_path)
-
-        global session
-        global graph
-        with graph.as_default():
-            set_session(session)
-            # Detect objects
-            r = model.detect([img], verbose=1)[0]
-        # Color splash
-        splash = self.color_splash(img, r['masks'])
-        # Save output
-        file_name = "splash_{:%Y%m%dT%H%M%S}.png".format(datetime.datetime.now())
-        skimage.io.imsave(file_name, splash)
-
-        print("Saved to ", file_name)
-
-# Example Execution
 # model = MaskRCNNModel()
 # pred_to_text = model.predict('bb.jpeg')
 # print(pred_to_text)
