@@ -72,7 +72,7 @@ class MaskRCNNModel:
             results = detected[0]
 
             # Display the results of the object detection
-            display_inpstances(
+            display_instances(
                 sample_img,
                 results['rois'],
                 results['masks'],
